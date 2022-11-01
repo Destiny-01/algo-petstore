@@ -34,9 +34,11 @@ export const stringToMicroAlgos = (str) => {
 };
 
 export function formatDate(date) {
+  console.log("date, datee, dateee, dat");
   if (!date) return;
   let datee = date.length > 13 ? date.slice(0, 13) : date;
   let dateee = new Date(parseInt(datee));
   const dat = dateee.toDateString() + ", " + dateee.toLocaleTimeString();
+  console.log(date, datee, dateee, dat);
   return dat.toString();
 }

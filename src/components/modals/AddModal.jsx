@@ -6,9 +6,9 @@ import {
   FloatingLabel,
   InputGroup,
 } from "react-bootstrap";
-import { uploadToIpfs } from "../../utils/request";
+import { uploadToIpfs } from "../../utils/pet";
 
-export default function AddModal({ show, handleClose, createRequest }) {
+export default function AddModal({ show, handleClose, createPet }) {
   const [data, setData] = useState({
     title: "",
     description: "",
@@ -86,9 +86,10 @@ export default function AddModal({ show, handleClose, createRequest }) {
         </Button>
         <Button
           variant="primary"
+          disabled={!data.image}
           onClick={() => {
             handleClose();
-            createRequest(data);
+            createPet(data);
             // createNft(performActions, data).then((res) => window.location.reload());
           }}
         >

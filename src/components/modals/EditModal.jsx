@@ -7,12 +7,12 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import { microAlgosToString } from "../../utils/conversions";
-import { uploadToIpfs } from "../../utils/request";
+import { uploadToIpfs } from "../../utils/pet";
 
-export default function EditModal({ show, handleClose, request, editRequest }) {
+export default function EditModal({ show, handleClose, pet, editPet }) {
   const [data, setData] = useState({
-    ...request,
-    price: parseInt(microAlgosToString(request.price)),
+    ...pet,
+    price: parseInt(microAlgosToString(pet.price)),
   });
   const handleChange = (e) =>
     setData({ ...data, [e.target.name]: e.target.value });
@@ -57,7 +57,7 @@ export default function EditModal({ show, handleClose, request, editRequest }) {
             <Form.Control
               value={data.price}
               type="number"
-              name="Price"
+              name="price"
               onChange={handleChange}
               placeholder="How much for this pet?"
             />
@@ -87,11 +87,11 @@ export default function EditModal({ show, handleClose, request, editRequest }) {
           variant="primary"
           onClick={() => {
             handleClose();
-            editRequest(data);
+            editPet(data);
             // createNft(performActions, data).then((res) => window.location.reload());
           }}
         >
-          Edit Auction
+          Update Auction
         </Button>
       </Modal.Footer>
     </Modal>

@@ -2,7 +2,7 @@ import algosdk from "algosdk";
 import {
   algodClient,
   indexerClient,
-  requestNote,
+  petNote,
   minRound,
   myAlgoConnect,
   numGlobalBytes,
@@ -48,7 +48,7 @@ export const uploadToIpfs = async (e) => {
   }
 };
 
-class Request {
+class Pet {
   constructor(title, image, description, price, sold, createdAt, appId, owner) {
     this.title = title;
     this.image = image;
@@ -69,9 +69,9 @@ const compileProgram = async (programSource) => {
   return new Uint8Array(Buffer.from(compileResponse.result, "base64"));
 };
 
-// CREATE REQUEST: ApplicationCreateTxn
-export const createRequestAction = async (senderAddress, request) => {
-  console.log("Adding request...", request, senderAddress);
+// CREATE PET: ApplicationCreateTxn
+export const createPetAction = async (senderAddress, pet) => {
+  console.log("Adding pet...", pet, senderAddress);
 
   let params = await algodClient.getTransactionParams().do();
 
@@ -80,14 +80,14 @@ export const createRequestAction = async (senderAddress, request) => {
   const compiledClearProgram = await compileProgram(clearProgram);
 
   // Build note to identify transaction later and required app args as Uint8Arrays
-  let note = new TextEncoder().encode(requestNote);
-  let title = new TextEncoder().encode(request.title);
-  let image = new TextEncoder().encode(request.image);
-  let description = new TextEncoder().encode(request.description);
+  let note = new TextEncoder().encode(petNote);
+  let title = new TextEncoder().encode(pet.title);
+  let image = new TextEncoder().encode(pet.image);
+  let description = new TextEncoder().encode(pet.description);
   let createdAt = algosdk.encodeUint64(
-    stringToMicroAlgos(String(request.createdAt))
+    stringToMicroAlgos(String(pet.createdAt))
   );
-  let price = algosdk.encodeUint64(stringToMicroAlgos(request.price));
+  let price = algosdk.encodeUint64(stringToMicroAlgos(pet.price));
 
   let appArgs = [title, image, description, price, createdAt];
 
@@ -134,20 +134,20 @@ export const createRequestAction = async (senderAddress, request) => {
   return appId;
 };
 
-// DONATE: Group transaction consisting of ApplicationCallTxn and PaymentTxn
-export const buyPetAction = async (senderAddress, request, amount) => {
+// ADOPT: Group transaction consisting of ApplicationCallTxn and PaymentTxn
+export const adoptPetAction = async (senderAddress, pet, amount) => {
   console.log("Donating...");
 
   let params = await algodClient.getTransactionParams().do();
 
   // Build required app args as Uint8Array
-  let buyArg = new TextEncoder().encode("buy");
-  let appArgs = [buyArg];
+  let adoptArg = new TextEncoder().encode("adopt");
+  let appArgs = [adoptArg];
 
   // Create ApplicationCallTxn
   let appCallTxn = algosdk.makeApplicationCallTxnFromObject({
     from: senderAddress,
-    appIndex: request.appId,
+    appIndex: pet.appId,
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     suggestedParams: params,
     appArgs,
@@ -156,7 +156,7 @@ export const buyPetAction = async (senderAddress, request, amount) => {
   // Create PaymentTxn
   let paymentTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
     from: senderAddress,
-    to: request.owner,
+    to: pet.owner,
     amount,
     suggestedParams: params,
   });
@@ -188,25 +188,25 @@ export const buyPetAction = async (senderAddress, request, amount) => {
   );
 };
 
-// EDIT REQUEST: Edit existing request
-export const editRequestAction = async (senderAddress, request) => {
-  console.log("Editing request...", request);
+// EDIT PET: Edit existing pet
+export const editPetAction = async (senderAddress, pet) => {
+  console.log("Editing pet...", pet);
 
   let params = await algodClient.getTransactionParams().do();
 
   // Build required app args as Uint8Array
   let editArg = new TextEncoder().encode("edit");
-  let title = new TextEncoder().encode(request.title);
-  let image = new TextEncoder().encode(request.image);
-  let description = new TextEncoder().encode(request.description);
-  let price = algosdk.encodeUint64(stringToMicroAlgos(request.price));
+  let title = new TextEncoder().encode(pet.title);
+  let image = new TextEncoder().encode(pet.image);
+  let description = new TextEncoder().encode(pet.description);
+  let price = algosdk.encodeUint64(stringToMicroAlgos(pet.price));
 
   let appArgs = [editArg, title, image, description, price];
 
   // Create ApplicationCallTxn
   let txn = algosdk.makeApplicationCallTxnFromObject({
     from: senderAddress,
-    appIndex: request.appId,
+    appIndex: pet.appId,
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     suggestedParams: params,
     appArgs,
@@ -232,8 +232,8 @@ export const editRequestAction = async (senderAddress, request) => {
   );
 };
 
-// DELETE REQUEST: ApplicationDeleteTxn
-export const deleteRequestAction = async (senderAddress, index) => {
+// DELETE PET: ApplicationDeleteTxn
+export const deletePetAction = async (senderAddress, index) => {
   console.log("Deleting application...");
 
   let params = await algodClient.getTransactionParams().do();
@@ -272,10 +272,10 @@ export const deleteRequestAction = async (senderAddress, index) => {
   console.log("Deleted app-id: ", appId);
 };
 
-// GET REQUESTS: Use indexer
-export const getRequestsAction = async () => {
-  console.log("Fetching requests...");
-  let note = new TextEncoder().encode(requestNote);
+// GET PETS: Use indexer
+export const getPetsAction = async () => {
+  console.log("Fetching pets...");
+  let note = new TextEncoder().encode(petNote);
   let encodedNote = Buffer.from(note).toString("base64");
 
   // Step 1: Get all transactions by notePrefix (+ minRound filter for performance)
@@ -285,19 +285,19 @@ export const getRequestsAction = async () => {
     .txType("appl")
     .minRound(minRound)
     .do();
-  let requests = [];
+  let pets = [];
   for (const transaction of transactionInfo.transactions) {
     let appId = transaction["created-application-index"];
     if (appId) {
       // Step 2: Get each application by application id
-      let request = await getApplication(appId);
-      if (request) {
-        requests.push(request);
+      let pet = await getApplication(appId);
+      if (pet) {
+        pets.push(pet);
       }
     }
   }
-  console.log("Requests fetched.");
-  return requests;
+  console.log("Pets fetched.");
+  return pets;
 };
 
 const getApplication = async (appId) => {
@@ -312,7 +312,7 @@ const getApplication = async (appId) => {
     }
     let globalState = response.application.params["global-state"];
 
-    // 2. Parse fields of response and return request
+    // 2. Parse fields of response and return pet
     let owner = response.application.params.creator;
     let title = "";
     let image = "";
@@ -354,7 +354,7 @@ const getApplication = async (appId) => {
       createdAt = getField("CREATED_AT", globalState).value.uint;
     }
 
-    return new Request(
+    return new Pet(
       title,
       image,
       description,

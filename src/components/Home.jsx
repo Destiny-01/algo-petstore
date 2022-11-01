@@ -1,31 +1,34 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import Loader from "./utils/Loader";
+import { Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
 import { NotificationError, NotificationSuccess } from "./utils/Notifications";
 import {
-  buyPetAction,
-  createRequestAction,
-  deleteRequestAction,
-  getRequestsAction,
-  editRequestAction,
-} from "../utils/request";
-import AllStories from "./AllStories";
-import { Col, Container, Row } from "react-bootstrap";
+  adoptPetAction,
+  createPetAction,
+  deletePetAction,
+  getPetsAction,
+  editPetAction,
+} from "../utils/pet";
+import { microAlgosToString, truncateAddress } from "../utils/conversions";
+import PetModal from "./modals/PetModal";
+import EditModal from "./modals/EditModal";
 import AddModal from "./modals/AddModal";
 
 export default function Home({ address, fetchBalance }) {
-  const [requests, setRequests] = useState([]);
+  const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addModal, showAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(null);
+  const [showModal, shouldShowModal] = useState(null);
 
-  const getRequests = async () => {
+  const getPets = async () => {
     setLoading(true);
-    getRequestsAction()
-      .then((requests) => {
-        if (requests) {
-          console.log(requests);
-          setRequests(requests);
+    getPetsAction()
+      .then((pets) => {
+        if (pets) {
+          console.log(pets);
+          setPets(pets);
         }
       })
       .catch((error) => {
@@ -37,72 +40,76 @@ export default function Home({ address, fetchBalance }) {
   };
 
   useEffect(() => {
-    getRequests();
+    getPets();
   }, []);
 
-  const createRequest = async (newRequest) => {
+  const createPet = async (newPet) => {
     showAddModal(false);
     setLoading(true);
-    createRequestAction(address, { ...newRequest, createdAt: Date.now() })
+    createPetAction(address, { ...newPet, createdAt: Date.now() })
       .then(() => {
-        toast(<NotificationSuccess text="Request added successfully." />);
-        getRequests();
+        toast(<NotificationSuccess text="Pet added successfully." />);
+        getPets();
         fetchBalance(address);
       })
       .catch((error) => {
         console.log(error);
-        toast(<NotificationError text="Failed to create a request." />);
+        toast(<NotificationError text="Failed to create a pet." />);
         setLoading(false);
       });
   };
 
-  const editRequest = async (editedRequest) => {
+  const editPet = async (editedPet) => {
     setLoading(true);
-    editRequestAction(address, editedRequest)
+    editPetAction(address, editedPet)
       .then(() => {
-        toast(<NotificationSuccess text="Request edited successfully." />);
-        getRequests();
+        toast(<NotificationSuccess text="Pet edited successfully." />);
+        getPets();
         fetchBalance(address);
       })
       .catch((error) => {
         console.log(error);
-        toast(<NotificationError text="Failed to edit request." />);
+        toast(<NotificationError text="Failed to edit pet." />);
         setLoading(false);
       });
   };
 
-  const buyPet = async (request, amount) => {
+  const adoptPet = async (pet, amount) => {
     setLoading(true);
-    buyPetAction(address, request, amount)
+    adoptPetAction(address, pet, amount)
       .then(() => {
-        toast(<NotificationSuccess text="Donated successfully" />);
-        getRequests();
+        toast(<NotificationSuccess text="Adopted Pet successfully" />);
+        getPets();
         fetchBalance(address);
       })
       .catch((error) => {
         console.log(error);
-        toast(<NotificationError text="Failed to donate request." />);
+        toast(<NotificationError text="Failed to adopt pet." />);
         setLoading(false);
       });
   };
 
-  const deleteRequest = async (request) => {
+  const deletePet = async (pet) => {
     setLoading(true);
-    deleteRequestAction(address, request.appId)
+    deletePetAction(address, pet.appId)
       .then(() => {
-        toast(<NotificationSuccess text="Request deleted successfully" />);
-        getRequests();
+        toast(<NotificationSuccess text="Pet deleted successfully" />);
+        getPets();
         fetchBalance(address);
       })
       .catch((error) => {
         console.log(error);
-        toast(<NotificationError text="Failed to delete request." />);
+        toast(<NotificationError text="Failed to delete pet." />);
         setLoading(false);
       });
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <div style={{ margin: "auto", maxHeight: "10vh", maxWidth: "10vh" }}>
+        <Spinner animation="border" />
+      </div>
+    );
   }
 
   return (
@@ -120,27 +127,62 @@ export default function Home({ address, fetchBalance }) {
         </Col>
       </Row>
       <Row>
-        {requests.length > 0 ? (
-          requests.map((req, i) => {
+        {pets.length > 0 ? (
+          pets.map((pet, i) => {
             return (
-              <AllStories
-                key={i}
-                address={address}
-                request={req}
-                buyPet={buyPet}
-                editRequest={editRequest}
-                deleteRequest={deleteRequest}
-              />
+              <Col key={i} md="4" className="mb-3">
+                <Card style={{ width: "18rem" }}>
+                  <Card.Header className="font-monospace text-secondary">
+                    <Row>
+                      <Col md="7">{truncateAddress(pet.owner)}</Col>
+                      <Col md="5">
+                        {parseFloat(microAlgosToString(pet.price))} ALGO
+                      </Col>
+                    </Row>
+                  </Card.Header>
+                  <Card.Img
+                    variant="top"
+                    src={pet.image.replace("ipfs.infura", "diac.infura-ipfs")}
+                  />
+                  <Card.Body>
+                    <Card.Title>{pet.title}</Card.Title>
+                    <Card.Text>{pet.description.slice(0, 30)}</Card.Text>
+                    <Button onClick={() => shouldShowModal(i)}>See More</Button>
+                    <PetModal
+                      key={i}
+                      show={showModal === i}
+                      pet={pet}
+                      showEditModal={() => setEditModal(i)}
+                      deletePet={deletePet}
+                      adoptPet={adoptPet}
+                      handleClose={() => shouldShowModal(null)}
+                      address={address}
+                    />
+                    <EditModal
+                      key={i}
+                      show={editModal === i}
+                      pet={pet}
+                      editPet={editPet}
+                      handleClose={() => {
+                        shouldShowModal(null);
+                        setEditModal(null);
+                      }}
+                    />
+                  </Card.Body>
+                </Card>
+              </Col>
             );
           })
         ) : (
-          <Loader />
+          <div style={{ margin: "auto", maxHeight: "10vh", maxWidth: "10vh" }}>
+            <Spinner animation="border" />
+          </div>
         )}
       </Row>
       <AddModal
         show={addModal}
         handleClose={() => showAddModal(false)}
-        createRequest={createRequest}
+        createPet={createPet}
       />
     </Container>
   );
