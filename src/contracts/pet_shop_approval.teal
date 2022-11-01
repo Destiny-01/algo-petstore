@@ -87,7 +87,7 @@ int 5
 ==
 assert
 txn Note
-byte "pet-shopp-app:uv1"
+byte "pet-shop-app:uv1"
 ==
 assert
 byte "TITLE"

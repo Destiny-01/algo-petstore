@@ -18,7 +18,7 @@ class PetShop:
     def application_creation(self):
         return Seq([
             Assert(Txn.application_args.length() == Int(5)),
-            Assert(Txn.note() == Bytes("pet-shopp-app:uv1")),
+            Assert(Txn.note() == Bytes("pet-shop-app:uv1")),
             App.globalPut(self.Variables.title, Txn.application_args[0]),
             App.globalPut(self.Variables.image, Txn.application_args[1]),
             App.globalPut(self.Variables.description, Txn.application_args[2]),
