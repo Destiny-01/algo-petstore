@@ -34,7 +34,7 @@ export default function PetModal({
         Price: <h5>{microAlgosToString(pet.price)}ALGO</h5>
         Date Listed: <h5>{formatDate(microAlgosToString(pet.createdAt))}</h5>
         {pet.owner !== address ? (
-          <Button onClick={adoptPet}>Adopt Pet</Button>
+          <Button onClick={() => adoptPet(pet)}>Adopt Pet</Button>
         ) : (
           <p>You can't adopt your pet</p>
         )}

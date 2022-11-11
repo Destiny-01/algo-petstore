@@ -171,10 +171,10 @@ export const adoptPetAction = async (senderAddress, pet, amount) => {
   let signedTxn = await myAlgoConnect.signTransaction(
     txnArray.map((txn) => txn.toByte())
   );
-  console.log("Signed group transaction");
   let tx = await algodClient
     .sendRawTransaction(signedTxn.map((txn) => txn.blob))
     .do();
+  console.log("Signed group transaction", tx);
 
   // Wait for group transaction to be confirmed
   let confirmedTxn = await algosdk.waitForConfirmation(algodClient, tx.txId, 4);

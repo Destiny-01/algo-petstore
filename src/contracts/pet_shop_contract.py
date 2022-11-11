@@ -12,7 +12,7 @@ class PetShop:
         createdAt = Bytes("CREATED_AT")
 
     class AppMethods:
-        buy = Bytes("buy")
+        adopt = Bytes("adopt")
         edit = Bytes("edit")
 
     def application_creation(self):
@@ -29,7 +29,7 @@ class PetShop:
             Approve()
         ])
 
-    def buy(self):
+    def adopt(self):
         valid_number_of_transactions = Global.group_size() == Int(2)
 
         valid_payment_to_seller = And(
@@ -39,7 +39,7 @@ class PetShop:
             Gtxn[1].sender() == Gtxn[0].sender(),
         )
 
-        can_buy = And(valid_number_of_transactions,
+        can_adopt = And(valid_number_of_transactions,
                       valid_payment_to_seller)
         
         update_state = Seq([
@@ -48,7 +48,7 @@ class PetShop:
             Approve()
         ])
 
-        return If(can_buy).Then(update_state).Else(Reject())
+        return If(can_adopt).Then(update_state).Else(Reject())
 
     def edit(self):
         is_owner = Txn.sender() == Global.creator_address()
@@ -71,7 +71,7 @@ class PetShop:
         return Cond(
             [Txn.application_id() == Int(0), self.application_creation()],
             [Txn.on_completion() == OnComplete.DeleteApplication, self.application_deletion()],
-            [Txn.application_args[0] == self.AppMethods.buy, self.buy()],
+            [Txn.application_args[0] == self.AppMethods.adopt, self.adopt()],
             [Txn.application_args[0] == self.AppMethods.edit, self.edit()]
         )
 

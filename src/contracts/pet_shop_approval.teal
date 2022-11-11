@@ -8,7 +8,7 @@ int DeleteApplication
 ==
 bnz main_l11
 txna ApplicationArgs 0
-byte "buy"
+byte "adopt"
 ==
 bnz main_l8
 txna ApplicationArgs 0

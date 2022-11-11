@@ -74,9 +74,9 @@ export default function Home({ address, fetchBalance }) {
       });
   };
 
-  const adoptPet = async (pet, amount) => {
+  const adoptPet = async (pet) => {
     setLoading(true);
-    adoptPetAction(address, pet, amount)
+    adoptPetAction(address, pet, pet.price)
       .then(() => {
         toast(<NotificationSuccess text="Adopted Pet successfully" />);
         getPets();
@@ -129,49 +129,53 @@ export default function Home({ address, fetchBalance }) {
       <Row>
         {pets.length > 0 ? (
           pets.map((pet, i) => {
-            return (
-              <Col key={i} md="4" className="mb-3">
-                <Card style={{ width: "18rem" }}>
-                  <Card.Header className="font-monospace text-secondary">
-                    <Row>
-                      <Col md="7">{truncateAddress(pet.owner)}</Col>
-                      <Col md="5">
-                        {parseFloat(microAlgosToString(pet.price))} ALGO
-                      </Col>
-                    </Row>
-                  </Card.Header>
-                  <Card.Img
-                    variant="top"
-                    src={pet.image.replace("ipfs.infura", "diac.infura-ipfs")}
-                  />
-                  <Card.Body>
-                    <Card.Title>{pet.title}</Card.Title>
-                    <Card.Text>{pet.description.slice(0, 30)}</Card.Text>
-                    <Button onClick={() => shouldShowModal(i)}>See More</Button>
-                    <PetModal
-                      key={i}
-                      show={showModal === i}
-                      pet={pet}
-                      showEditModal={() => setEditModal(i)}
-                      deletePet={deletePet}
-                      adoptPet={adoptPet}
-                      handleClose={() => shouldShowModal(null)}
-                      address={address}
+            if (pet.sold === 0) {
+              return (
+                <Col key={i} md="4" className="mb-3">
+                  <Card style={{ width: "18rem" }}>
+                    <Card.Header className="font-monospace text-secondary">
+                      <Row>
+                        <Col md="7">{truncateAddress(pet.owner)}</Col>
+                        <Col md="5">
+                          {parseFloat(microAlgosToString(pet.price))} ALGO
+                        </Col>
+                      </Row>
+                    </Card.Header>
+                    <Card.Img
+                      variant="top"
+                      src={pet.image.replace("ipfs.infura", "diac.infura-ipfs")}
                     />
-                    <EditModal
-                      key={i}
-                      show={editModal === i}
-                      pet={pet}
-                      editPet={editPet}
-                      handleClose={() => {
-                        shouldShowModal(null);
-                        setEditModal(null);
-                      }}
-                    />
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
+                    <Card.Body>
+                      <Card.Title>{pet.title}</Card.Title>
+                      <Card.Text>{pet.description.slice(0, 30)}</Card.Text>
+                      <Button onClick={() => shouldShowModal(i)}>
+                        See More
+                      </Button>
+                      <PetModal
+                        key={i}
+                        show={showModal === i}
+                        pet={pet}
+                        showEditModal={() => setEditModal(i)}
+                        deletePet={deletePet}
+                        adoptPet={adoptPet}
+                        handleClose={() => shouldShowModal(null)}
+                        address={address}
+                      />
+                      <EditModal
+                        key={i}
+                        show={editModal === i}
+                        pet={pet}
+                        editPet={editPet}
+                        handleClose={() => {
+                          shouldShowModal(null);
+                          setEditModal(null);
+                        }}
+                      />
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            }
           })
         ) : (
           <div style={{ margin: "auto", maxHeight: "10vh", maxWidth: "10vh" }}>
